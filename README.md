@@ -14,30 +14,6 @@ then open <http://127.0.0.1:48770>.
 
 ---
 
-## It does not install yet, and that is on purpose
-
-`Formula/foreman-panel.rb` carries a **placeholder `url` and `sha256`**:
-
-```ruby
-url "https://github.com/oferaharon/foreman/archive/refs/tags/vX.Y.Z.tar.gz"
-version "0.0.0-unreleased"
-sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-```
-
-No published tag of the panel contains the `foreman-panel` command yet — the `bin` field
-that creates it landed after the last tag was cut. A formula pointing at that tag would
-install a package with no command, and `bin.install_symlink` would link nothing. So the
-two fields say `vX.Y.Z` rather than a real tag, and the checksum is not a checksum at all:
-an install attempt fails on a URL that reads as a placeholder, which is the clearest
-possible statement of the situation.
-
-They are filled in by [the release ritual](#bumping-the-formula-after-a-release), once,
-after the first release containing the command is cut. Everything else in the formula is
-finished and has been proven by a local build — see
-[Proving a change](#proving-a-change-without-touching-a-running-panel).
-
----
-
 ## What the formula does
 
 `npm install` into `libexec` with Homebrew's standard node arguments, then symlink the
@@ -89,11 +65,11 @@ Then in `Formula/foreman-panel.rb`:
 1. `url` → that URL, with the real tag.
 2. `sha256` → the value printed above. Never a value that was not computed from the
    published tarball.
-3. **Delete the `version` line.** It exists only because `vX.Y.Z` is not a parseable
-   version; a real tag gives Homebrew the version for free, and leaving an explicit one
-   behind would pin the formula to a number the URL contradicts.
-4. Delete the placeholder comment block above `url`, and this section's warning from the
-   README.
+
+There is no third step, and in particular **no `version` line**: a real tag gives Homebrew
+the version for free, and an explicit one would pin the formula to a number the URL could
+later contradict. (One lived here briefly, while the formula pointed at a placeholder tag
+that Homebrew had nothing to parse. It is gone.)
 
 Commit to the tap's default branch with the message `foreman-panel X.Y.Z`, then verify:
 
@@ -129,16 +105,21 @@ be in a tap"*. So the proof runs through a scratch tap, which also keeps the rea
 TAP="$(brew --repository)/Library/Taps/foreman-scratch/homebrew-local"
 mkdir -p "$TAP/Formula" && git -C "$TAP" init -q
 
-# In a checkout of the panel, on the commit you want to prove:
-git archive --format=tar.gz --prefix=foreman-panel-0.1.0/ -o /tmp/foreman-panel-0.1.0.tar.gz HEAD
-shasum -a 256 /tmp/foreman-panel-0.1.0.tar.gz
+# In a checkout of the panel, on the commit you want to prove. The version in the
+# directory prefix is what Homebrew will read the version from, so make it the one
+# package.json carries on that commit, or the formula's test block will fail honestly.
+V=0.2.0
+git archive --format=tar.gz --prefix=foreman-panel-$V/ -o /tmp/foreman-panel-$V.tar.gz HEAD
+shasum -a 256 /tmp/foreman-panel-$V.tar.gz
 ```
 
 Copy `Formula/foreman-panel.rb` into `$TAP/Formula/`, and change **only** `url` (to
-`file:///tmp/foreman-panel-0.1.0.tar.gz`) and `sha256` (to the value just printed), and
-delete the placeholder `version` line — the version then comes from the tarball's own
-filename. `diff` the two files afterwards and confirm nothing else moved; every other line
+`file:///tmp/foreman-panel-$V.tar.gz`) and `sha256` (to the value just printed). `diff` the
+two files afterwards and confirm those are the only two lines that moved; every other line
 you are about to prove is the line that will ship.
+
+To prove the *published* formula rather than an unreleased change, skip the tarball
+entirely: copy the file in unchanged and let it fetch the real tag.
 
 ### 2. The isolation, before anything starts
 
@@ -228,7 +209,7 @@ every ten seconds forever.
 brew services stop foreman-panel
 brew uninstall foreman-panel
 rm -f "${HOMEBREW_USER_CONFIG_HOME:-$HOME/.homebrew}/services/foreman-panel.env"
-rm -rf /tmp/foreman-scratch /tmp/foreman-panel-0.1.0.tar.gz
+rm -rf /tmp/foreman-scratch /tmp/foreman-panel-*.tar.gz
 rm -f "$(brew --prefix)"/var/log/foreman.log "$(brew --prefix)"/var/log/foreman-error.log
 rm -rf "$(brew --repository)/Library/Taps/foreman-scratch"
 ```
@@ -282,7 +263,8 @@ worth the name.
   `$HOMEBREW_XDG_CONFIG_HOME/homebrew`, else `~/.homebrew`** — so the `.env` path is not
   always under `~/.homebrew`.
 - **`brew audit --new` performs an online reachability check on `url` even without
-  `--online`**, which is why the placeholder formula's only complaint is a 404.
+  `--online`.** Measured from both sides: against a placeholder tag it reported the 404 as
+  its only complaint, and against the published tag it reports nothing at all.
 - **`brew audit --strict` sorts `depends_on :macos` ahead of the named dependencies** and
   fails the audit otherwise.
 - **`brew services start` regenerates the plist from the formula**, so `restart` is both

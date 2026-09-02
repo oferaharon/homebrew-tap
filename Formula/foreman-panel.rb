@@ -51,32 +51,15 @@ class ForemanPanel < Formula
   desc "Local web panel for every Claude Code session on this Mac"
   homepage "https://github.com/oferaharon/foreman"
 
-  # ┌───────────────────────────────────────────────────────────────────────────────────┐
-  # │ PLACEHOLDER — this formula does not install yet, and is not meant to.              │
-  # │                                                                                   │
-  # │ `url` and `sha256` below are deliberately not a real release. No published tag of  │
-  # │ the panel contains the `foreman-panel` command yet: the `bin` field that creates   │
-  # │ it landed after the last tag was cut, so a formula pointing at that tag would      │
-  # │ install a package with no command and `bin.install_symlink` would link nothing.    │
-  # │                                                                                   │
-  # │ They are filled in by the release ritual, in this order and no other:              │
-  # │                                                                                   │
-  # │   1. a release containing the command is cut in oferaharon/foreman;                │
-  # │   2. url     → .../archive/refs/tags/<that tag>.tar.gz;                            │
-  # │   3. sha256  → curl -fsSL <that url> | shasum -a 256                               │
-  # │   4. version → delete the line. It is here only because `vX.Y.Z` gives Homebrew    │
-  # │                nothing to parse; a real tag supplies the version for free, and an  │
-  # │                explicit one left behind would pin a number the URL contradicts.    │
-  # │                                                                                   │
-  # │ The checksum is taken over the tarball GitHub generates *for the tag*, which is    │
-  # │ why the tag has to exist first. A formula bumped before it does points at a 404    │
-  # │ that Homebrew reports as a download failure, with no hint that the release simply  │
-  # │ is not out yet. Never write a checksum that was not computed from the published    │
-  # │ tarball.                                                                          │
-  # └───────────────────────────────────────────────────────────────────────────────────┘
-  url "https://github.com/oferaharon/foreman/archive/refs/tags/vX.Y.Z.tar.gz"
-  version "0.0.0-unreleased"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  # `url` and `sha256` are bumped **after** a release is published, never before it: the
+  # checksum is taken over the tarball GitHub generates *for the tag*, whose bytes are
+  # stable only once the tag exists. Compute it, never copy it from anywhere:
+  #   curl -fsSL <url> | shasum -a 256
+  # A formula bumped ahead of its tag points at a 404 that Homebrew reports as a download
+  # failure, with no hint that the release simply is not out yet. The full ritual is under
+  # "Bumping the formula after a release" in this tap's README.
+  url "https://github.com/oferaharon/foreman/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "3b8cec5a8815a43e024cd5bf338e22339bcb1cb54b6d89b0d7e8342b8cd60a48"
 
   license "MIT"
 
