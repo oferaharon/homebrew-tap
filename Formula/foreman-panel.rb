@@ -58,8 +58,8 @@ class ForemanPanel < Formula
   # A formula bumped ahead of its tag points at a 404 that Homebrew reports as a download
   # failure, with no hint that the release simply is not out yet. The full ritual is under
   # "Bumping the formula after a release" in this tap's README.
-  url "https://github.com/oferaharon/foreman/archive/refs/tags/v0.5.0.tar.gz"
-  sha256 "1ad11cab743167c200889ffeffec9a6e67aa020a1d42bb9db1d27cbd3a700e53"
+  url "https://github.com/oferaharon/foreman/archive/refs/tags/v0.6.0.tar.gz"
+  sha256 "fabf25eb92e6b7bcce56e3e0fa61ab2d2b6e4be8d4691157b345d9365d784de4"
 
   license "MIT"
 
